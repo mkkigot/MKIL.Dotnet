@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "MKIL.DotnetTest\\MKIL.DotnetTest.OrderService.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "MKIL.DotnetTest.UserService.Api\\MKIL.DotnetTest.UserService.Api.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

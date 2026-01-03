@@ -1,0 +1,76 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36603.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MKIL.DotnetTest.OrderService", "MKIL.DotnetTest.OrderService", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MKIL.DotnetTest.UserService", "MKIL.DotnetTest.UserService", "{29755DFF-E67F-4847-ABE8-8B86FE0B0E74}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MKIL.DotnetTest._Shared", "MKIL.DotnetTest._Shared", "{EB4B6CE6-B89D-44DE-9CF2-1CBB55D49A1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKIL.DotnetTest.Shared.Lib", "src\MKIL.DotnetTest.Shared.Lib\MKIL.DotnetTest.Shared.Lib.csproj", "{1D670C67-5228-A4B8-C6D0-0CD31D776C66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKIL.DotnetTest.OrderService.Api", "src\MKIL.DotnetTest.OrderService\MKIL.DotnetTest.OrderService.Api\MKIL.DotnetTest.OrderService.Api.csproj", "{7BE51DC3-5FA1-A9CE-FF0A-F961B045350F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKIL.DotnetTest.OrderService.Domain", "src\MKIL.DotnetTest.OrderService\MKIL.DotnetTest.OrderService.Domain\MKIL.DotnetTest.OrderService.Domain.csproj", "{2B89A56E-BF8A-C701-0F24-26F394FDAEEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKIL.DotnetTest.OrderService.Infrastructure", "src\MKIL.DotnetTest.OrderService\MKIL.DotnetTest.OrderService.Infrastructure\MKIL.DotnetTest.OrderService.Infrastructure.csproj", "{8283D5FA-50BC-165F-9D4C-41F46D753179}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKIL.DotnetTest.UserService.Api", "src\MKIL.DotnetTest.UserService\MKIL.DotnetTest.UserService.Api\MKIL.DotnetTest.UserService.Api.csproj", "{04BFE8A7-D1E5-432B-E4DC-BEFC47CB228D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKIL.DotnetTest.UserService.Domain", "src\MKIL.DotnetTest.UserService\MKIL.DotnetTest.UserService.Domain\MKIL.DotnetTest.UserService.Domain.csproj", "{2D54DC42-D7AF-834F-B25B-2DDEAB58BC17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKIL.DotnetTest.UserService.Infrasture", "src\MKIL.DotnetTest.UserService\MKIL.DotnetTest.UserService.Infrastructure\MKIL.DotnetTest.UserService.Infrasture.csproj", "{EFDFD1B3-90FE-19E6-1B2E-591D0C11D4C0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1D670C67-5228-A4B8-C6D0-0CD31D776C66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D670C67-5228-A4B8-C6D0-0CD31D776C66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D670C67-5228-A4B8-C6D0-0CD31D776C66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D670C67-5228-A4B8-C6D0-0CD31D776C66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BE51DC3-5FA1-A9CE-FF0A-F961B045350F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BE51DC3-5FA1-A9CE-FF0A-F961B045350F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BE51DC3-5FA1-A9CE-FF0A-F961B045350F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BE51DC3-5FA1-A9CE-FF0A-F961B045350F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B89A56E-BF8A-C701-0F24-26F394FDAEEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B89A56E-BF8A-C701-0F24-26F394FDAEEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B89A56E-BF8A-C701-0F24-26F394FDAEEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B89A56E-BF8A-C701-0F24-26F394FDAEEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8283D5FA-50BC-165F-9D4C-41F46D753179}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8283D5FA-50BC-165F-9D4C-41F46D753179}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8283D5FA-50BC-165F-9D4C-41F46D753179}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8283D5FA-50BC-165F-9D4C-41F46D753179}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04BFE8A7-D1E5-432B-E4DC-BEFC47CB228D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04BFE8A7-D1E5-432B-E4DC-BEFC47CB228D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04BFE8A7-D1E5-432B-E4DC-BEFC47CB228D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04BFE8A7-D1E5-432B-E4DC-BEFC47CB228D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D54DC42-D7AF-834F-B25B-2DDEAB58BC17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D54DC42-D7AF-834F-B25B-2DDEAB58BC17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D54DC42-D7AF-834F-B25B-2DDEAB58BC17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D54DC42-D7AF-834F-B25B-2DDEAB58BC17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFDFD1B3-90FE-19E6-1B2E-591D0C11D4C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFDFD1B3-90FE-19E6-1B2E-591D0C11D4C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFDFD1B3-90FE-19E6-1B2E-591D0C11D4C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFDFD1B3-90FE-19E6-1B2E-591D0C11D4C0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1D670C67-5228-A4B8-C6D0-0CD31D776C66} = {EB4B6CE6-B89D-44DE-9CF2-1CBB55D49A1D}
+		{7BE51DC3-5FA1-A9CE-FF0A-F961B045350F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{2B89A56E-BF8A-C701-0F24-26F394FDAEEB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{8283D5FA-50BC-165F-9D4C-41F46D753179} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{04BFE8A7-D1E5-432B-E4DC-BEFC47CB228D} = {29755DFF-E67F-4847-ABE8-8B86FE0B0E74}
+		{2D54DC42-D7AF-834F-B25B-2DDEAB58BC17} = {29755DFF-E67F-4847-ABE8-8B86FE0B0E74}
+		{EFDFD1B3-90FE-19E6-1B2E-591D0C11D4C0} = {29755DFF-E67F-4847-ABE8-8B86FE0B0E74}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AF9558B4-25F3-4D9A-BBE5-FBE86C3A34F7}
+	EndGlobalSection
+EndGlobal

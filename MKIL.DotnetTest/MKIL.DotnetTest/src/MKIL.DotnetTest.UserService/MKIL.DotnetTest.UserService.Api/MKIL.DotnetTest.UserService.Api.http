@@ -1,0 +1,6 @@
+@MKIL.DotnetTest.UserService.Api_HostAddress = http://localhost:5156
+
+GET {{MKIL.DotnetTest.UserService.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
