@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MKIL.DotnetTest.Shared.Lib.Logging
 {
-    
+    /// <summary>
+    /// Setup correlation Id for debugging
+    /// </summary>
     public class CorrelationIdMiddleware
     {
         private readonly RequestDelegate _next;

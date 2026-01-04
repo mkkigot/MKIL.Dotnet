@@ -1,8 +1,7 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using MKIL.DotnetTest.UserService.Domain;
 using MKIL.DotnetTest.UserService.Domain.DTO;
 using MKIL.DotnetTest.UserService.Domain.Interfaces;
-using System.ComponentModel.DataAnnotations;
 
 namespace MKIL.DotnetTest.UserService.Api.Controllers
 {
@@ -11,12 +10,10 @@ namespace MKIL.DotnetTest.UserService.Api.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IValidator<UserDto> _userValidator;
 
-        public UsersController(IUserService userService, IValidator<UserDto> userValidator)
+        public UsersController(IUserService userService)
         {
             _userService = userService;
-            _userValidator = userValidator;
         }
 
         [HttpGet("{id}")]
@@ -33,25 +30,20 @@ namespace MKIL.DotnetTest.UserService.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] UserDto userPayload)
         {
-            var validationResult = await _userValidator.ValidateAsync(userPayload);
-
-            if (!validationResult.IsValid)
+            try
             {
-                var errorBody = new
-                {
-                    errors = validationResult.Errors.Select(e => new
-                    {
-                        field = e.PropertyName,
-                        message = e.ErrorMessage
-                    })
-                };
+                Guid generatedUserId = await _userService.CreateUser(userPayload);
 
-                return BadRequest(errorBody);
+                return Ok(generatedUserId);
             }
-
-            Guid generatedUserId = await _userService.CreateUser(userPayload);
-
-            return Ok(generatedUserId);
+            catch (UserServiceException us)
+            {
+                return StatusCode((int)us.ErrorCode, us.ErrorList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("all")]

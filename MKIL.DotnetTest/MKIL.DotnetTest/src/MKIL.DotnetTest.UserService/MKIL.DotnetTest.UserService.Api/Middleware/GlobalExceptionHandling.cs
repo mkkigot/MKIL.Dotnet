@@ -1,86 +1,73 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Serilog;
 using System.Diagnostics;
 
 namespace MKIL.DotnetTest.UserService.Api.Middleware
 {
-    public class GlobalExceptionHandling : IExceptionFilter
+    public class GlobalExceptionFilter : IExceptionFilter
     {
-        public GlobalExceptionHandling()
-        {
-
-        }
-
+        private const string CorrelationIdHeader = "X-Correlation-ID";
         public void OnException(ExceptionContext context)
         {
-            throw new NotImplementedException();
+            var exception = context.Exception;
+
+            // Use Serilog's static Log class with ForContext for better tracing
+            Log.ForContext<GlobalExceptionFilter>()
+               .Error(exception,
+                   "Unhandled exception occurred. TraceId: {TraceId}, Path: {Path}, Method: {Method}",
+                   context.HttpContext.TraceIdentifier,
+                   context.HttpContext.Request.Path,
+                   context.HttpContext.Request.Method);
+
+
+            // Rest of the code remains the same...
+            var (statusCode, title, detail) = exception switch
+            {
+                ValidationException validationEx => (400, "Validation Error", validationEx.Message),
+                //NotFoundException notFoundEx => (404, "Not Found", notFoundEx.Message),
+                UnauthorizedAccessException => (401, "Unauthorized", "Access denied"),
+                _ => (500, "Internal Server Error", "An unexpected error occurred")
+            };
+
+            var problemDetails = new ProblemDetails
+            {
+                Status = statusCode,
+                Title = title,
+                Detail = detail,
+                Instance = context.HttpContext.Request.Path,
+                Extensions =
+            {
+                ["traceId"] = context.HttpContext.TraceIdentifier,
+                ["timestamp"] = DateTime.UtcNow
+            }
+            };
+
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                problemDetails.Extensions["exceptionType"] = exception.GetType().Name;
+                problemDetails.Extensions["stackTrace"] = exception.StackTrace;
+            }
+
+            context.Result = new ObjectResult(problemDetails)
+            {
+                StatusCode = statusCode
+            };
+
+            context.ExceptionHandled = true;
         }
-        /*
-public void OnException(ExceptionContext context)
-{
-   var stackTrace = new StackTrace(context.Exception, true);
-   foreach (var frame in stackTrace.GetFrames())
-   {
-       var fileName = frame.GetFileName();
-       var method = frame.GetMethod();
-       var lineNumber = frame.GetFileLineNumber();
 
-       if (!string.IsNullOrEmpty(fileName) && lineNumber != 0)
-       {
-           // Handle async method state machines (MoveNext)
-           var methodName = method.DeclaringType?.Name;
-           if (methodName == "MoveNext" && method.DeclaringType?.DeclaringType != null)
-           {
-               // Get the original async method name by reflecting on the declaring type
-               methodName = method.DeclaringType.DeclaringType.Name;
-           }
-           else if (methodName != null && methodName.Contains(">"))
-           {
-               // Handle async/iterator method names generated with a pattern like "<MethodName>d__"
-               methodName = methodName.Substring(1, methodName.IndexOf(">") - 1);
-           }
 
-           // todo: get correlationId here
-           Log.Error(context.Exception, methodName, fileName, lineNumber);
-           LogError($"Error: {context.Exception}", $"{refId}", methodName, fileName, lineNumber)
+        private string GetOrCreateCorrelationId(HttpContext context)
+        {
+            if (context.Request.Headers.TryGetValue(CorrelationIdHeader, out var correlationId)
+                && !string.IsNullOrWhiteSpace(correlationId))
+            {
+                return correlationId!;
+            }
 
-           var problemDetails = new ProblemDetails
-           {
-               Status = StatusCodes.Status500InternalServerError,
-               Title = $"Internal Server Error. Please contact ITGBO and provide this exception reference : {correlationId}",
-               Detail = context.Exception.Message,
-               Instance = context.HttpContext.Request.Path
-           };
-
-           context.Result = new ObjectResult(problemDetails)
-           {
-               StatusCode = StatusCodes.Status500InternalServerError
-           };
-      }
-      else
-      {
-          var refId = Guid.NewGuid();
-          WatchLogger.LogError($"Error: {context.Exception}", $"{refId}", "", fileName, lineNumber);
-
-          var problemDetails = new ProblemDetails
-          {
-              Status = StatusCodes.Status500InternalServerError,
-              Title = $"Internal Server Error. Please contact ITGBO and provide this exception reference : {refId}",
-              Detail = context.Exception.Message,
-              Instance = context.HttpContext.Request.Path
-          };
-
-          context.Result = new ObjectResult(problemDetails)
-          {
-              StatusCode = StatusCodes.Status500InternalServerError
-          };
-      }
-
-       context.ExceptionHandled = true;
-   }
-}
-
-*/
+            return Guid.NewGuid().ToString();
+        }
     }
 }

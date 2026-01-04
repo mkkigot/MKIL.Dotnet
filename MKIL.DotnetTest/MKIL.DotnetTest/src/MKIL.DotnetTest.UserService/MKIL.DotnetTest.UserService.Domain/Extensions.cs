@@ -1,4 +1,5 @@
-﻿using MKIL.DotnetTest.UserService.Domain.DTO;
+﻿using FluentValidation.Results;
+using MKIL.DotnetTest.UserService.Domain.DTO;
 using MKIL.DotnetTest.UserService.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -23,10 +24,27 @@ namespace MKIL.DotnetTest.UserService.Domain
         public static User ToUserEntity(this UserDto dto)
         {
             User user = new User();
+
+            if (dto.Id.HasValue)
+                user.Id = dto.Id.Value;
+
             user.Name = dto.Name;
             user.Email = dto.Email;
 
             return user;
+        }
+
+        public static List<ErrorDto> ToErrorDtoList(this ValidationResult? result)
+        {
+            List<ErrorDto> errorDtos = new List<ErrorDto>();
+
+            if (result != null && !result.IsValid)
+            {
+                errorDtos = result.Errors.Select(e => new ErrorDto(e.PropertyName, e.ErrorMessage))
+                    .ToList();
+            }
+
+            return errorDtos;
         }
     }
 }

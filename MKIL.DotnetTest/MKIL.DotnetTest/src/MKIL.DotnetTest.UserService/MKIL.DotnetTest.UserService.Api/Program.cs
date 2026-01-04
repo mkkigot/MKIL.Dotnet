@@ -7,28 +7,29 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// logger
 builder.ConfigureSerilog("UserService");
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerDocumentation("UserService", "v1");
 builder.Services.AddSwaggerGen();
 
+// application services
 builder.Services.ConfigureAppDomainAndInfra(builder.Configuration);
 
-builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add<GlobalExceptionHandling>();
-});
+builder.Services.AddControllers(
+//    options =>
+//{
+//    options.Filters.Add<GlobalExceptionHandling>();
+//}
+);
 
 var app = builder.Build();
 
-// Use correlation ID middleware
+// for debugging
 app.UseCorrelationId();
-
-// Use the enhanced request logging
 app.UseRequestResponseLogging();
 
 // Configure the HTTP request pipeline.
@@ -65,5 +66,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-app.Run();

@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.22" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MKIL.DotnetTest.OrderService.Domain\MKIL.DotnetTest.OrderService.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

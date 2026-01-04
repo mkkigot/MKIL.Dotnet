@@ -1,4 +1,6 @@
-﻿using MKIL.DotnetTest.UserService.Domain.DTO;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using MKIL.DotnetTest.UserService.Domain.DTO;
 using MKIL.DotnetTest.UserService.Domain.Entities;
 using MKIL.DotnetTest.UserService.Domain.Interfaces;
 
@@ -7,14 +9,21 @@ namespace MKIL.DotnetTest.UserService.Domain.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _repository;
-        
-        public UserService(IUserRepository repository) 
+        private readonly IValidator<UserDto> _userValidator;
+
+        public UserService(IUserRepository repository, IValidator<UserDto> userValidator) 
         {
             _repository = repository;
+            _userValidator = userValidator;
         }
 
         public async Task<Guid> CreateUser(UserDto userDto)
         {
+            ValidationResult? validationResult = await _userValidator.ValidateAsync(userDto);
+
+            if (!validationResult.IsValid)
+                throw new UserServiceException(StatusCode.ValidationError, validationResult.ToErrorDtoList());
+
             User user = userDto.ToUserEntity();
             user.CreatedDate = DateTime.Now;
 

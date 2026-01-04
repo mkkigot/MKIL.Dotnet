@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MKIL.DotnetTest.UserService.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -25,9 +26,10 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                
+
                 entity.Property(e => e.Id)
                     .ValueGeneratedOnAdd();
+                //if using database: .HasDefaultValueSql("NEWSEQUENTIALID()");
 
                 entity.Property(e => e.Name)
                     .IsRequired()
@@ -39,6 +41,9 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.Data
 
                 entity.HasIndex(e => e.Email)
                     .IsUnique();
+
+                entity.Property(e => e.CreatedDate)
+                    .IsRequired();
             });
 
         }

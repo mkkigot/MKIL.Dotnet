@@ -1,13 +1,32 @@
+using MKIL.DotnetTest.OrderService.Api.Extensions;
+using MKIL.DotnetTest.Shared.Lib;
+using MKIL.DotnetTest.Shared.Lib.Logging;
+using MKIL.DotnetTest.OrderService.Infrastructure.Data;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// logger
+builder.ConfigureSerilog("OrderService");
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// swagger
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerDocumentation("OrderService", "v1");
 builder.Services.AddSwaggerGen();
 
+//application services
+builder.Services.ConfigureAppDomainAndInfra(builder.Configuration);
+
+builder.Services.AddControllers();
+
+
 var app = builder.Build();
+
+// for debugging
+app.UseCorrelationId();
+
+// Use the enhanced request logging
+app.UseRequestResponseLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -22,4 +41,25 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+
+try
+{
+    Log.Information("Starting OrderService");
+
+    // Ensure database is created (important for in-memory)
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+        dbContext.Database.EnsureCreated();
+    }
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
