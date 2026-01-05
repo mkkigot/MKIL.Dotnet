@@ -1,14 +1,17 @@
-﻿using FluentValidation;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using MKIL.DotnetTest.OrderService.Domain;
 using Serilog;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 
-namespace MKIL.DotnetTest.UserService.Api.Middleware
+namespace MKIL.DotnetTest.OrderService.Api.Middleware
 {
     public class GlobalExceptionFilter : IExceptionFilter
     {
         private const string CorrelationIdHeader = "X-Correlation-ID";
+
         public void OnException(ExceptionContext context)
         {
             var exception = context.Exception;
@@ -21,15 +24,19 @@ namespace MKIL.DotnetTest.UserService.Api.Middleware
                    context.HttpContext.Request.Path,
                    context.HttpContext.Request.Method);
 
+            if (context.Exception is OrderServiceException && ((OrderServiceException)context.Exception).ErrorCode == StatusCode.ValidationError)
 
-            // Rest of the code remains the same...
-            var (statusCode, title, detail) = exception switch
-            {
-                ValidationException validationEx => (400, "Validation Error", validationEx.Message),
-                //NotFoundException notFoundEx => (404, "Not Found", notFoundEx.Message),
-                UnauthorizedAccessException => (401, "Unauthorized", "Access denied"),
-                _ => (500, "Internal Server Error", "An unexpected error occurred")
-            };
+                if (context.Exception)
+
+
+                    // Rest of the code remains the same...
+                    var (statusCode, title, detail) = exception switch
+                    {
+                        ValidationException validationEx => (400, "Validation Error", validationEx.Message),
+                        NotFoundException notFoundEx => (404, "Not Found", notFoundEx.Message),
+                        UnauthorizedAccessException => (401, "Unauthorized", "Access denied"),
+                        _ => (500, "Internal Server Error", "An unexpected error occurred")
+                    };
 
             var problemDetails = new ProblemDetails
             {
@@ -70,4 +77,5 @@ namespace MKIL.DotnetTest.UserService.Api.Middleware
             return Guid.NewGuid().ToString();
         }
     }
+
 }

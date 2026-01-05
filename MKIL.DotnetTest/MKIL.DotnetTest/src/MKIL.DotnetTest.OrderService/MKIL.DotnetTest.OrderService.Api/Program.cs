@@ -9,13 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 // logger
 builder.ConfigureSerilog("OrderService");
 
+//application services
+builder.Services.ConfigureAppDomainAndInfra(builder.Configuration);
+
 // swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerDocumentation("OrderService", "v1");
 builder.Services.AddSwaggerGen();
-
-//application services
-builder.Services.ConfigureAppDomainAndInfra(builder.Configuration);
 
 builder.Services.AddControllers();
 

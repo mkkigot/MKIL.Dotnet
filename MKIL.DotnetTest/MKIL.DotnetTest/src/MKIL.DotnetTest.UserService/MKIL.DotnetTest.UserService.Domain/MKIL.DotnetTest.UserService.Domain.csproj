@@ -7,8 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DTO\UserDto.cs" />
+    <Compile Remove="Interfaces\IEventPublisher.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MKIL.DotnetTest.Shared.Lib\MKIL.DotnetTest.Shared.Lib.csproj" />
   </ItemGroup>
 
 </Project>

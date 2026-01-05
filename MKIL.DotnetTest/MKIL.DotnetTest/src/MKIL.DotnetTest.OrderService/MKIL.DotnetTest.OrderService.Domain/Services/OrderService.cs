@@ -25,6 +25,7 @@ namespace MKIL.DotnetTest.OrderService.Domain.Services
                 throw new OrderServiceException(StatusCode.ValidationError, validationResult.ToErrorDtoList());
 
             Order order = orderDto.ToOrderEntity();
+            order.Id = Guid.Empty;
             order.CreatedDate = DateTime.Now;
 
             Guid generatedOrderId = await _orderRepository.Create(order);

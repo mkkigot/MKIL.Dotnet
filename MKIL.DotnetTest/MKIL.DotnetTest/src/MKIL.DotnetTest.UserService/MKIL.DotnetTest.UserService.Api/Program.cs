@@ -1,7 +1,6 @@
 using MKIL.DotnetTest.Shared.Lib;
 using MKIL.DotnetTest.Shared.Lib.Logging;
 using MKIL.DotnetTest.UserService.Api.Extensions;
-using MKIL.DotnetTest.UserService.Api.Middleware;
 using MKIL.DotnetTest.UserService.Infrastructure.Data;
 using Serilog;
 

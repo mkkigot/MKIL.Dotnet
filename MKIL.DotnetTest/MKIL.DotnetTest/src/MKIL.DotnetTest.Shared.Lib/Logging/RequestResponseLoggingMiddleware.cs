@@ -12,7 +12,6 @@ namespace MKIL.DotnetTest.Shared.Lib.Logging
         private readonly RequestDelegate _next;
         private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
         private static readonly string[] SensitiveHeaders = { "authorization", "cookie", "x-api-key" };
-        private const string CorrelationIdHeader = "X-Correlation-ID";
 
         public RequestResponseLoggingMiddleware(RequestDelegate next)
         {
@@ -38,7 +37,7 @@ namespace MKIL.DotnetTest.Shared.Lib.Logging
             // Add to response headers
             context.Response.OnStarting(() =>
             {
-                context.Response.Headers[CorrelationIdHeader] = correlationId;
+                context.Response.Headers[Constants.CORRELATION_HEADER] = correlationId;
                 return Task.CompletedTask;
             });
 
@@ -74,7 +73,7 @@ namespace MKIL.DotnetTest.Shared.Lib.Logging
 
         private string GetOrCreateCorrelationId(HttpContext context)
         {
-            if (context.Request.Headers.TryGetValue(CorrelationIdHeader, out var correlationId)
+            if (context.Request.Headers.TryGetValue(Constants.CORRELATION_HEADER, out var correlationId)
                 && !string.IsNullOrWhiteSpace(correlationId))
             {
                 return correlationId!;

@@ -1,13 +1,7 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
+﻿using FluentValidation.Results;
 using MKIL.DotnetTest.OrderService.Domain.DTO;
 using MKIL.DotnetTest.OrderService.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using MKIL.DotnetTest.Shared.Lib.DTO;
 
 namespace MKIL.DotnetTest.OrderService.Domain
 {
@@ -40,17 +34,17 @@ namespace MKIL.DotnetTest.OrderService.Domain
             return dto;
         }
 
-        public static UserCache ToUserCacheEntity(this UserCacheDto dto)
+        public static UserCache ToUserCacheEntity(this UserDto dto)
         {
             UserCache userCache = new UserCache();
-            userCache.UserId = dto.UserId;
+            userCache.UserId = dto.Id.Value;
             userCache.Email = dto.Email;
             return userCache;
         }
 
-        public static UserCacheDto ToUserCacheDto(this UserCache userCache)
+        public static UserDto ToUserCacheDto(this UserCache userCache)
         {
-            UserCacheDto dto = new UserCacheDto(userCache.UserId, userCache.Email);
+            UserDto dto = new UserDto(userCache.UserId, userCache.Email);
             return dto;
         }
 

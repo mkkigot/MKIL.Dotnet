@@ -1,15 +1,9 @@
 ﻿
 using MKIL.DotnetTest.UserService.Domain.DTO;
+using static MKIL.DotnetTest.Shared.Lib.Constants;
 
 namespace MKIL.DotnetTest.UserService.Domain
 {
-    public enum StatusCode 
-    {
-        NotFound = 404,
-        ValidationError = 400,
-        InternalError = 500 
-    }
-
     public class UserServiceException : Exception
     {
         public UserServiceException(StatusCode statusCode, string msg) : base(msg)

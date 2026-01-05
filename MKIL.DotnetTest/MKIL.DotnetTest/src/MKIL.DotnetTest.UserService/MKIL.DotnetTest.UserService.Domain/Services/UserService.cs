@@ -1,8 +1,12 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
-using MKIL.DotnetTest.UserService.Domain.DTO;
+using Microsoft.Extensions.Configuration;
+using MKIL.DotnetTest.Shared.Lib.DTO;
+using MKIL.DotnetTest.Shared.Lib.Logging;
+using MKIL.DotnetTest.Shared.Lib.Messaging;
 using MKIL.DotnetTest.UserService.Domain.Entities;
 using MKIL.DotnetTest.UserService.Domain.Interfaces;
+using static MKIL.DotnetTest.Shared.Lib.Constants;
 
 namespace MKIL.DotnetTest.UserService.Domain.Services
 {
@@ -10,26 +14,49 @@ namespace MKIL.DotnetTest.UserService.Domain.Services
     {
         private readonly IUserRepository _repository;
         private readonly IValidator<UserDto> _userValidator;
+        private readonly IEventPublisher _eventPublisher;
+        private readonly IConfiguration _configuration;
+        private readonly ICorrelationIdService _correlationIdService;
 
-        public UserService(IUserRepository repository, IValidator<UserDto> userValidator) 
+        public UserService(IUserRepository repository, IValidator<UserDto> userValidator, IEventPublisher eventPublisher, IConfiguration configuration, ICorrelationIdService correlationIdService) 
         {
             _repository = repository;
             _userValidator = userValidator;
+            _eventPublisher = eventPublisher;
+            _configuration = configuration;
+            _correlationIdService = correlationIdService;
+        }
+
+        private string CreateUserTopic
+        {
+            get
+            {
+                return _configuration["Kafka:Topic:NewUser"] ?? throw new InvalidOperationException("Kafka:Topic:NewUser configuration is missing");
+            }
         }
 
         public async Task<Guid> CreateUser(UserDto userDto)
         {
+            // validation checking
             ValidationResult? validationResult = await _userValidator.ValidateAsync(userDto);
 
             if (!validationResult.IsValid)
                 throw new UserServiceException(StatusCode.ValidationError, validationResult.ToErrorDtoList());
 
+            // Save the user to the database
             User user = userDto.ToUserEntity();
+            user.Id = Guid.Empty;
             user.CreatedDate = DateTime.Now;
 
-            Guid generatedUserId = await _repository.CreateUser(user);
+            await _repository.CreateUser(user);
 
-            return generatedUserId;
+            // for debugging and tracing
+            string correlationId = _correlationIdService.GetCorrelationId();
+
+            // notify new msg to OrderService
+            await _eventPublisher.PublishAsync(CreateUserTopic, user.ToDto(), correlationId);
+
+            return user.Id;
         }
 
         public async Task<UserDto?> GetUserById(Guid userId)
@@ -55,14 +82,5 @@ namespace MKIL.DotnetTest.UserService.Domain.Services
             return new List<UserDto>(); // return empty
         }
 
-        public Task UpdateUser(UserDto user)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task DeleteUser(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

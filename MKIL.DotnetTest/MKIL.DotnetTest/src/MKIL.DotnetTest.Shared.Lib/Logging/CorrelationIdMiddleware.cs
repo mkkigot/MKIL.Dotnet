@@ -10,29 +10,27 @@ namespace MKIL.DotnetTest.Shared.Lib.Logging
     public class CorrelationIdMiddleware
     {
         private readonly RequestDelegate _next;
-        private const string CorrelationIdHeader = "X-Correlation-ID";
 
         public CorrelationIdMiddleware(RequestDelegate next)
         {
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context)
+        public async Task InvokeAsync(HttpContext context, ICorrelationIdService correlationIdService)
         {
             var correlationId = GetOrCreateCorrelationId(context);
 
-            // Store in HttpContext for later use
-            context.Items["CorrelationId"] = correlationId;
+            correlationIdService.SetCorrelationId(correlationId);
 
             // Add to response headers
             context.Response.OnStarting(() =>
             {
-                context.Response.Headers[CorrelationIdHeader] = correlationId;
+                context.Response.Headers[Constants.CORRELATION_HEADER] = correlationId;
                 return Task.CompletedTask;
             });
 
             // Push to Serilog LogContext
-            using (LogContext.PushProperty("CorrelationId", correlationId))
+            using (LogContext.PushProperty(Constants.CORRELATION_HEADER, correlationId))
             {
                 await _next(context);
             }
@@ -41,7 +39,7 @@ namespace MKIL.DotnetTest.Shared.Lib.Logging
         private string GetOrCreateCorrelationId(HttpContext context)
         {
             // Check incoming request header
-            if (context.Request.Headers.TryGetValue(CorrelationIdHeader, out var correlationId)
+            if (context.Request.Headers.TryGetValue(Constants.CORRELATION_HEADER, out var correlationId)
                 && !string.IsNullOrWhiteSpace(correlationId))
             {
                 return correlationId!;

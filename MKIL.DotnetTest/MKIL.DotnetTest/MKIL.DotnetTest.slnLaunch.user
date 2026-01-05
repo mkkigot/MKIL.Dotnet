@@ -3,12 +3,14 @@
     "Name": "New Profile",
     "Projects": [
       {
-        "Path": "MKIL.DotnetTest\\MKIL.DotnetTest.OrderService.Api.csproj",
-        "Action": "Start"
+        "Path": "src\\MKIL.DotnetTest.OrderService\\MKIL.DotnetTest.OrderService.Api\\MKIL.DotnetTest.OrderService.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
       },
       {
-        "Path": "MKIL.DotnetTest.UserService.Api\\MKIL.DotnetTest.UserService.Api.csproj",
-        "Action": "Start"
+        "Path": "src\\MKIL.DotnetTest.UserService\\MKIL.DotnetTest.UserService.Api\\MKIL.DotnetTest.UserService.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
       }
     ]
   }

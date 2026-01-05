@@ -10,9 +10,11 @@ namespace MKIL.DotnetTest.OrderService.Api.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
-        public OrderController(IOrderService orderService) 
+        private readonly IUserCacheService _userCacheService;
+        public OrderController(IOrderService orderService, IUserCacheService userCacheService) 
         {
             _orderService = orderService;
+            _userCacheService = userCacheService;
         }
 
         [HttpPost]
@@ -40,6 +42,13 @@ namespace MKIL.DotnetTest.OrderService.Api.Controllers
             List<OrderDto> allOrderList = await _orderService.GetAllOrders();
 
             return Ok(allOrderList);
+        }
+
+        [HttpGet("check/usercaches")]
+        public async Task<IActionResult> GetAllUserCaches()
+        {
+            var a = await _userCacheService.GetAllUserCache();
+            return Ok(a);
         }
     }
 }

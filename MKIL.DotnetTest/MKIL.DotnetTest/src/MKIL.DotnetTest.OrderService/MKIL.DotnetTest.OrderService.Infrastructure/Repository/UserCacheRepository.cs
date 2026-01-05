@@ -24,21 +24,15 @@ namespace MKIL.DotnetTest.OrderService.Infrastructure.Repository
             return await _dbContext.UserCaches.FindAsync(userId);
         }
 
-        public async Task InsertOrUpdateUserCache(UserCache userCache)
+        public async Task InsertUserCache(UserCache userCache)
         {
-            UserCache? existing = await _dbContext.UserCaches.FindAsync(userCache.UserId);
+            _dbContext.UserCaches.Add(userCache);
+            await _dbContext.SaveChangesAsync();
+        }
 
-            if (existing == null)
-            {
-                userCache.SyncedAt = DateTime.Now;
-                _dbContext.UserCaches.Add(userCache);
-            }
-            else
-            {
-                existing.Email = userCache.Email;
-                existing.SyncedAt = DateTime.Now;
-            }
-
+        public async Task UpdateUserCache(UserCache userCache)
+        {
+            _dbContext.Set<UserCache>().Update(userCache);
             await _dbContext.SaveChangesAsync();
         }
 

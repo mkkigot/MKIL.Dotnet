@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Interface\IUserCacheService.cs" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentValidation" Version="12.1.1" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <ProjectReference Include="..\..\MKIL.DotnetTest.Shared.Lib\MKIL.DotnetTest.Shared.Lib.csproj" />
   </ItemGroup>
 
 </Project>
