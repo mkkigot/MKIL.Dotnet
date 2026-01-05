@@ -1,6 +1,5 @@
 ﻿using FluentValidation.Results;
 using MKIL.DotnetTest.Shared.Lib.DTO;
-using MKIL.DotnetTest.UserService.Domain.DTO;
 using MKIL.DotnetTest.UserService.Domain.Entities;
 
 namespace MKIL.DotnetTest.UserService.Domain

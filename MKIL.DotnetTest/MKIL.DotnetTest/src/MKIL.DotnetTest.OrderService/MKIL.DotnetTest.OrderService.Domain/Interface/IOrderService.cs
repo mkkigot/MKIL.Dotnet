@@ -1,4 +1,4 @@
-﻿using MKIL.DotnetTest.OrderService.Domain.DTO;
+﻿using MKIL.DotnetTest.Shared.Lib.DTO;
 
 namespace MKIL.DotnetTest.OrderService.Domain.Interface
 {

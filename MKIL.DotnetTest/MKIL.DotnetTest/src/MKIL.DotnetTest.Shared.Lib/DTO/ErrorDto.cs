@@ -1,4 +1,4 @@
-﻿namespace MKIL.DotnetTest.OrderService.Domain.DTO
+﻿namespace MKIL.DotnetTest.Shared.Lib.DTO
 {
     public class ErrorDto
     {

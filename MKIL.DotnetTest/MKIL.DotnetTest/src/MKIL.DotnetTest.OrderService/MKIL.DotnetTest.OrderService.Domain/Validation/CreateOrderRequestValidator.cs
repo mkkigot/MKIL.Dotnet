@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
-using MKIL.DotnetTest.OrderService.Domain.DTO;
 using MKIL.DotnetTest.OrderService.Domain.Interface;
+using MKIL.DotnetTest.Shared.Lib.DTO;
 
 namespace MKIL.DotnetTest.OrderService.Domain.Validation
 {

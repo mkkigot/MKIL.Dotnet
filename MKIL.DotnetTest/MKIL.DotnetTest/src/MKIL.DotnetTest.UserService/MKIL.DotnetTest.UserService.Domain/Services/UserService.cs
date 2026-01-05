@@ -27,13 +27,6 @@ namespace MKIL.DotnetTest.UserService.Domain.Services
             _correlationIdService = correlationIdService;
         }
 
-        private string CreateUserTopic
-        {
-            get
-            {
-                return _configuration["Kafka:Topic:NewUser"] ?? throw new InvalidOperationException("Kafka:Topic:NewUser configuration is missing");
-            }
-        }
 
         public async Task<Guid> CreateUser(UserDto userDto)
         {
@@ -82,5 +75,50 @@ namespace MKIL.DotnetTest.UserService.Domain.Services
             return new List<UserDto>(); // return empty
         }
 
+        public async Task<List<UserOrder>> GetAllUserOrders(Guid userId)
+        {
+            List<UserOrder> userOrderLIst = await _repository.GetAllUserOrders(userId);
+            return userOrderLIst;
+        }
+
+        public async Task<int> InsertOrUpdateUserOrder(OrderDto orderDto)
+        {
+            // validation checking
+            ValidationResult? validationResult = await _userValidator.ValidateAsync(userDto);
+
+            if (!validationResult.IsValid)
+                throw new UserServiceException(StatusCode.ValidationError, validationResult.ToErrorDtoList());
+
+            // save user order to database
+            UserOrder? userOrder = await _repository.GetUserOrderByOrderId(orderDto.Id.Value);
+
+            if (userOrder == null)
+            {
+                userOrder = new UserOrder();
+                userOrder.OrderId = orderDto.Id.Value;
+                userOrder.UserId = orderDto.UserId; 
+            }
+
+            userOrder.SyncedAt = DateTime.Now;
+            await _repository.InsertOrUpdateUserOrder(userOrder);
+
+            return userOrder.UId;
+        }
+
+        private string CreateUserTopic
+        {
+            get
+            {
+                return _configuration["Kafka:Topic:NewUser"] ?? throw new InvalidOperationException("Kafka:Topic:NewUser configuration is missing");
+            }
+        }
+
+        private string CreateUserOrderTopic
+        {
+            get
+            {
+                return _configuration["Kafka:Topic:NewOrder"] ?? throw new InvalidOperationException("Kafka:Topic:NewUser configuration is missing");
+            }
+        }
     }
 }

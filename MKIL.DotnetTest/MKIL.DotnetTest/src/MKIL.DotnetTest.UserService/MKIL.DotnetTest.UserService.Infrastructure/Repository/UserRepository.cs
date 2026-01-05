@@ -2,11 +2,7 @@
 using MKIL.DotnetTest.UserService.Domain.Entities;
 using MKIL.DotnetTest.UserService.Domain.Interfaces;
 using MKIL.DotnetTest.UserService.Infrastructure.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace MKIL.DotnetTest.UserService.Infrastructure.Repository
 {
@@ -40,6 +36,27 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.Repository
         public async Task<bool> IsEmailExisting(string email)
         {
             return await _context.Users.AnyAsync(u => u.Email.ToLower() == email.ToLower());
+        }
+
+        public async Task<int> InsertOrUpdateUserOrder(UserOrder userOrder)
+        {
+            _context.UserOrder.Update(userOrder);
+            await _context.SaveChangesAsync();
+
+            return userOrder.UId;
+        }
+
+        public async Task<List<UserOrder>> GetAllUserOrders(Guid userId)
+        {
+            List<UserOrder> userOrderList = await _context.UserOrder.Where(p => p.UserId == userId).ToListAsync();
+
+            return userOrderList;
+        }
+
+        public async Task<UserOrder?> GetUserOrderByOrderId(Guid orderId)
+        {
+            UserOrder? userOrder = await _context.UserOrder.Where(p => p.OrderId == orderId).FirstOrDefaultAsync();
+            return userOrder;
         }
     }
 }

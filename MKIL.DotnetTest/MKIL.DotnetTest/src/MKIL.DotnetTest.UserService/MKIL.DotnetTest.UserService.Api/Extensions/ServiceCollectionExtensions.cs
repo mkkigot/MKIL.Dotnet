@@ -35,7 +35,8 @@ namespace MKIL.DotnetTest.UserService.Api.Extensions
 
             // validators
             services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
-
+            services.AddValidatorsFromAssemblyContaining<CreateUserOrderValidator>();
+            
         }
 
     }

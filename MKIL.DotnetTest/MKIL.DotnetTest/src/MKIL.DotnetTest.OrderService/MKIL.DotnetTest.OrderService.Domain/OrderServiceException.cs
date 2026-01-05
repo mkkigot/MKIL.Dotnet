@@ -1,9 +1,4 @@
-﻿using MKIL.DotnetTest.OrderService.Domain.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MKIL.DotnetTest.Shared.Lib.DTO;
 
 namespace MKIL.DotnetTest.OrderService.Domain
 {

@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="DTO\UserDto.cs" />
     <Compile Remove="Interfaces\IEventPublisher.cs" />
   </ItemGroup>
 

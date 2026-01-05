@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MKIL.DotnetTest.OrderService.Domain;
-using MKIL.DotnetTest.OrderService.Domain.DTO;
 using MKIL.DotnetTest.OrderService.Domain.Interface;
+using MKIL.DotnetTest.Shared.Lib.DTO;
 
 namespace MKIL.DotnetTest.OrderService.Api.Controllers
 {

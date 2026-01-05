@@ -1,5 +1,4 @@
 ﻿using FluentValidation.Results;
-using MKIL.DotnetTest.OrderService.Domain.DTO;
 using MKIL.DotnetTest.OrderService.Domain.Entities;
 using MKIL.DotnetTest.Shared.Lib.DTO;
 
@@ -22,7 +21,7 @@ namespace MKIL.DotnetTest.OrderService.Domain
             return order;
         }
 
-        public static OrderDto ToOrderDto (this Order order)
+        public static OrderDto ToDto (this Order order)
         {
             OrderDto dto = new OrderDto();
             dto.Id = order.Id;

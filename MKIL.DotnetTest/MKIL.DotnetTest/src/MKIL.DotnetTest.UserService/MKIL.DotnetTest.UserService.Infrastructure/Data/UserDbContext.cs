@@ -18,6 +18,7 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<UserOrder> UserOrder { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,6 +46,23 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.Data
                 entity.Property(e => e.CreatedDate)
                     .IsRequired();
             });
+
+            modelBuilder.Entity<UserOrder>(entity => {
+                entity.HasKey(e => e.UId);
+
+                entity.Property(e => e.UId)
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+                
+                entity.Property(e => e.OrderId)
+                    .IsRequired();
+                
+                entity.Property(e => e.SyncedAt)
+                    .IsRequired();
+            });
+
 
         }
     }
