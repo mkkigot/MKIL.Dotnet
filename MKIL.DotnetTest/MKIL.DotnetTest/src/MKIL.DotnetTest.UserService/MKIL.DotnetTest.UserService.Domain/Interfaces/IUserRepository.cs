@@ -10,6 +10,6 @@ namespace MKIL.DotnetTest.UserService.Domain.Interfaces
         public Task<bool> IsEmailExisting(string email);
         public Task<int> InsertOrUpdateUserOrder(UserOrder userOrder);
         public Task<UserOrder?> GetUserOrderByOrderId(Guid orderId);
-        public Task<List<UserOrder>> GetAllUserOrders(Guid userId);
+        public Task<List<UserOrder>> GetAllOrdersOfUser(Guid userId);
     }
 }

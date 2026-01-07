@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
+using MKIL.DotnetTest.Shared.Lib.Utilities;
 using Serilog;
 using System.Text;
 
@@ -65,7 +66,9 @@ namespace MKIL.DotnetTest.Shared.Lib.Service
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failed to send message to DLQ! Original message may be lost.");
+                _logger.Error(ex, "Failed to send message to DLQ! Original message may be lost. -- Inner Exception: {innerException}    FailedMessage BOdy: {failedMessageBody} ",
+                    exception,
+                    failedMessage.ToJson());
             }
         }
 

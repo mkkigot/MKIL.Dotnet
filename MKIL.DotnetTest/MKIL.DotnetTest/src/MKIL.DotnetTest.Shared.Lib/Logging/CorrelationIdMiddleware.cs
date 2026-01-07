@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using MKIL.DotnetTest.Shared.Lib.Utilities;
 using Serilog.Context;
 
 namespace MKIL.DotnetTest.Shared.Lib.Logging

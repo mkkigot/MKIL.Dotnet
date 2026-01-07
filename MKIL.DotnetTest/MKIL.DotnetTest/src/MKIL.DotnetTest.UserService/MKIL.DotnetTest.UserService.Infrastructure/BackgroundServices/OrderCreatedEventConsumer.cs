@@ -4,8 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MKIL.DotnetTest.OrderService.Domain.Interface;
 using MKIL.DotnetTest.Shared.Lib.DTO;
-using MKIL.DotnetTest.Shared.Lib.Messaging.Utilities;
 using MKIL.DotnetTest.Shared.Lib.Service;
+using MKIL.DotnetTest.Shared.Lib.Utilities;
 using MKIL.DotnetTest.UserService.Domain.Interfaces;
 using Serilog;
 using Serilog.Context;
@@ -83,7 +83,6 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.BackgroundServices
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     ConsumeResult<string, string>? result = null;
-
                     try
                     {
                         result = consumer.Consume(TimeSpan.FromSeconds(1));
@@ -122,7 +121,7 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.BackgroundServices
                             },
                             cancellationToken: stoppingToken
                         );
-
+                        
                         consumer.Commit(result);
                     }
                     catch (Exception ex)
@@ -163,37 +162,26 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.BackgroundServices
 
         public async Task ProcessNewOrder(IConsumer<string, string> consumer, ConsumeResult<string, string> result, CancellationToken stoppingToken)
         {
-            UserDto? userDto = JsonSerializer.Deserialize<UserDto>(result.Message.Value);
+            OrderDto? orderDto = JsonSerializer.Deserialize<OrderDto>(result.Message.Value);
 
-            if (userDto != null)
+            if (orderDto != null)
             {
-                _logger.Debug("Deserialized event for UserId: {UserId}", userDto.Id);
+                _logger.Debug("Deserialized event for OrderId: {OrderId}", orderDto.Id);
 
-                // Process with scoped services
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+                    
+                    int uoid = await userService.InsertOrUpdateUserOrder(orderDto);
 
-                    //await orderService.
-                    await userService (userDto, stoppingToken);
-
-                    // Commit after successful processing
-                    consumer.Commit(result);
-
+                    _logger.Information("Successfully processed saved user order:- {UserOrderId}", uoid);
                 }
-
-                _logger.Information(
-                    "Successfully processed and committed message for UserId: {UserId}",
-                    userDto.Id
-                );
             }
             else
             {
                 _logger.Warning("Failed to deserialize message, skipping");
-                consumer.Commit(result); // Commit to avoid reprocessing
             }
         }
-
 
         private string GetHeaderValue(Headers headers, string key)
         {

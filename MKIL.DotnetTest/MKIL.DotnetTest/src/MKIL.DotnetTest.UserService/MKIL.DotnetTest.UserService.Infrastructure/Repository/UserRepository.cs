@@ -46,7 +46,7 @@ namespace MKIL.DotnetTest.UserService.Infrastructure.Repository
             return userOrder.UId;
         }
 
-        public async Task<List<UserOrder>> GetAllUserOrders(Guid userId)
+        public async Task<List<UserOrder>> GetAllOrdersOfUser(Guid userId)
         {
             List<UserOrder> userOrderList = await _context.UserOrder.Where(p => p.UserId == userId).ToListAsync();
 

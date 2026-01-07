@@ -1,4 +1,4 @@
-using MKIL.DotnetTest.Shared.Lib;
+using MKIL.DotnetTest.Shared.Lib.Documentation;
 using MKIL.DotnetTest.Shared.Lib.Logging;
 using MKIL.DotnetTest.UserService.Api.Extensions;
 using MKIL.DotnetTest.UserService.Infrastructure.Data;
@@ -18,12 +18,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.ConfigureAppDomainAndInfra(builder.Configuration);
 
 
-builder.Services.AddControllers(
-//    options =>
-//{
-//    options.Filters.Add<GlobalExceptionHandling>();
-//}
-);
+builder.Services.AddControllers();
 
 var app = builder.Build();
 

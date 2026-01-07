@@ -63,6 +63,13 @@ namespace MKIL.DotnetTest.UserService.Api.Controllers
             return Ok(allUserList);
         }
 
+        [HttpGet("{userId}/orders")]
+        public async Task<IActionResult> GetAllOrdersOfUser(Guid userId)
+        {
+            var a = await _userService.GetAllOrdersOfUser(userId);
+            return Ok(a);
+        }
+
         /// <summary>
         /// This is to test a permanent error and see how it would be handled in event consumer
         /// Expectation: Consumer shouldn't abort process. It should log properly and push the message to DeadLetter topic

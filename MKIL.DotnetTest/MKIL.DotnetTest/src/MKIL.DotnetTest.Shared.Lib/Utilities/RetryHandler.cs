@@ -1,5 +1,4 @@
 ﻿using MKIL.DotnetTest.Shared.Lib.Messaging.Exceptions;
-using MKIL.DotnetTest.Shared.Lib.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MKIL.DotnetTest.Shared.Lib.Messaging.Utilities
+namespace MKIL.DotnetTest.Shared.Lib.Utilities
 {
     public static class RetryHandler
     {

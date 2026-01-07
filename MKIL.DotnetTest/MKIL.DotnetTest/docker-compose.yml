@@ -35,6 +35,17 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
 
+  kafka-topic-init:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - kafka
+    entrypoint: >
+      bash -c "
+      sleep 15 &&
+      kafka-topics --create --topic user-created-events --bootstrap-server kafka:29092 &&
+      kafka-topics --create --topic order-created-events --bootstrap-server kafka:29092 &&
+      kafka-topics --create --topic deadletter-events --bootstrap-server kafka:29092"
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -58,6 +69,7 @@ services:
       - Kafka__BootstrapServers=kafka:29092
     depends_on:
       - kafka
+      - kafka-topic-init
 
   order-service:
     build:
@@ -70,9 +82,4 @@ services:
       - Kafka__BootstrapServers=kafka:29092
     depends_on:
       - kafka
-# volumes:
-#   seq-data:
-
-# networks:
-#   microservices-network:
-#     driver: bridge
+      - kafka-topic-init

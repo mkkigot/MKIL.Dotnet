@@ -38,7 +38,7 @@ namespace MKIL.DotnetTest.OrderService.Domain.Services
             // save the user to the database 
             Order order = orderDto.ToOrderEntity();
             order.Id = Guid.Empty;
-            order.CreatedDate = DateTime.Now;
+            order.CreatedDate = DateTime.UtcNow;
 
             await _orderRepository.Create(order);
 

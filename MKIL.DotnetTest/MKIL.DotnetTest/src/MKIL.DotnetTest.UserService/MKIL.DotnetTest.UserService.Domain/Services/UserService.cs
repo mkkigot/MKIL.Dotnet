@@ -6,7 +6,7 @@ using MKIL.DotnetTest.Shared.Lib.Logging;
 using MKIL.DotnetTest.Shared.Lib.Messaging;
 using MKIL.DotnetTest.UserService.Domain.Entities;
 using MKIL.DotnetTest.UserService.Domain.Interfaces;
-using static MKIL.DotnetTest.Shared.Lib.Constants;
+using static MKIL.DotnetTest.Shared.Lib.Utilities.Constants;
 
 namespace MKIL.DotnetTest.UserService.Domain.Services
 {
@@ -14,16 +14,18 @@ namespace MKIL.DotnetTest.UserService.Domain.Services
     {
         private readonly IUserRepository _repository;
         private readonly IValidator<UserDto> _userValidator;
+        private readonly IValidator<UserOrder> _userOrderValidator;
         private readonly IEventPublisher _eventPublisher;
         private readonly IConfiguration _configuration;
         private readonly ICorrelationIdService _correlationIdService;
 
-        public UserService(IUserRepository repository, IValidator<UserDto> userValidator, IEventPublisher eventPublisher, IConfiguration configuration, ICorrelationIdService correlationIdService) 
+        public UserService(IUserRepository repository, IValidator<UserDto> userValidator, IEventPublisher eventPublisher, IConfiguration configuration, ICorrelationIdService correlationIdService, IValidator<UserOrder> userOrderValidator) 
         {
             _repository = repository;
             _userValidator = userValidator;
             _eventPublisher = eventPublisher;
             _configuration = configuration;
+            _userOrderValidator = userOrderValidator;
             _correlationIdService = correlationIdService;
         }
 
@@ -75,16 +77,17 @@ namespace MKIL.DotnetTest.UserService.Domain.Services
             return new List<UserDto>(); // return empty
         }
 
-        public async Task<List<UserOrder>> GetAllUserOrders(Guid userId)
+        public async Task<List<UserOrder>> GetAllOrdersOfUser(Guid userId)
         {
-            List<UserOrder> userOrderLIst = await _repository.GetAllUserOrders(userId);
+            List<UserOrder> userOrderLIst = await _repository.GetAllOrdersOfUser(userId);
             return userOrderLIst;
         }
 
         public async Task<int> InsertOrUpdateUserOrder(OrderDto orderDto)
         {
             // validation checking
-            ValidationResult? validationResult = await _userValidator.ValidateAsync(userDto);
+            UserOrder userOrderToValidate = orderDto.ToUserOrderEntity();
+            ValidationResult? validationResult = await _userOrderValidator.ValidateAsync(userOrderToValidate);
 
             if (!validationResult.IsValid)
                 throw new UserServiceException(StatusCode.ValidationError, validationResult.ToErrorDtoList());
@@ -113,12 +116,5 @@ namespace MKIL.DotnetTest.UserService.Domain.Services
             }
         }
 
-        private string CreateUserOrderTopic
-        {
-            get
-            {
-                return _configuration["Kafka:Topic:NewOrder"] ?? throw new InvalidOperationException("Kafka:Topic:NewUser configuration is missing");
-            }
-        }
     }
 }

@@ -1,8 +1,8 @@
 using MKIL.DotnetTest.OrderService.Api.Extensions;
-using MKIL.DotnetTest.Shared.Lib;
 using MKIL.DotnetTest.Shared.Lib.Logging;
 using MKIL.DotnetTest.OrderService.Infrastructure.Data;
 using Serilog;
+using MKIL.DotnetTest.Shared.Lib.Documentation;
 
 var builder = WebApplication.CreateBuilder(args);
 

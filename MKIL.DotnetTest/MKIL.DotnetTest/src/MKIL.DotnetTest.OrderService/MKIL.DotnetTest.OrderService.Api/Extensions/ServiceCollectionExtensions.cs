@@ -7,6 +7,7 @@ using MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices;
 using MKIL.DotnetTest.OrderService.Infrastructure.Data;
 using MKIL.DotnetTest.OrderService.Infrastructure.Repository;
 using MKIL.DotnetTest.Shared.Lib.Logging;
+using MKIL.DotnetTest.Shared.Lib.Messaging;
 using MKIL.DotnetTest.Shared.Lib.Service;
 using OrderServiceClass = MKIL.DotnetTest.OrderService.Domain.Services.OrderService;
 
@@ -19,6 +20,9 @@ namespace MKIL.DotnetTest.OrderService.Api.Extensions
 
             // Register BackgroundService
             services.AddHostedService<UserCreatedEventConsumer>();
+
+            // Register Kafka Producer
+            services.AddSingleton<IEventPublisher, KafkaEventPublisher>();
 
             // Dead queue service to store the failed messages
             services.AddScoped<IDeadLetterQueueService, DeadLetterQueueService>();

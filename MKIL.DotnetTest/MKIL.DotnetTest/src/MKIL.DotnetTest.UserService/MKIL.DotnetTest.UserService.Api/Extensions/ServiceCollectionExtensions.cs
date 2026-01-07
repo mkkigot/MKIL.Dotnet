@@ -5,6 +5,7 @@ using MKIL.DotnetTest.Shared.Lib.Messaging;
 using MKIL.DotnetTest.Shared.Lib.Service;
 using MKIL.DotnetTest.UserService.Domain.Interfaces;
 using MKIL.DotnetTest.UserService.Domain.Validator;
+using MKIL.DotnetTest.UserService.Infrastructure.BackgroundServices;
 using MKIL.DotnetTest.UserService.Infrastructure.Data;
 using MKIL.DotnetTest.UserService.Infrastructure.Repository;
 using UserServiceClass = MKIL.DotnetTest.UserService.Domain.Services.UserService;
@@ -15,6 +16,9 @@ namespace MKIL.DotnetTest.UserService.Api.Extensions
     {
         public static void ConfigureAppDomainAndInfra(this IServiceCollection services, IConfiguration config)
         {
+            // Register BackgroundService
+            services.AddHostedService<OrderCreatedEventConsumer>();
+
             // Register Kafka Producer
             services.AddSingleton<IEventPublisher, KafkaEventPublisher>();
 
@@ -33,9 +37,9 @@ namespace MKIL.DotnetTest.UserService.Api.Extensions
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserService, UserServiceClass>();
 
-            // validators
+            // validators; adds all validators in the same assembly
             services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
-            services.AddValidatorsFromAssemblyContaining<CreateUserOrderValidator>();
+            
             
         }
 

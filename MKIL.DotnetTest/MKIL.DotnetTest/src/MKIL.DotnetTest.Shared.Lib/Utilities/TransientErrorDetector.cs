@@ -2,10 +2,9 @@
 using Confluent.Kafka;
 using System.Data.Common;
 using System.Net.Sockets;
-using System.Net.Http;
 using System.Text.Json;
 
-namespace MKIL.DotnetTest.Shared.Lib.Messaging.Utilities
+namespace MKIL.DotnetTest.Shared.Lib.Utilities
 {
     public static class TransientErrorDetector
     {
@@ -25,7 +24,7 @@ namespace MKIL.DotnetTest.Shared.Lib.Messaging.Utilities
         public static bool IsPermanent(Exception ex)
         {
             // Serialization errors
-            if (ex is JsonException || ex is System.Text.Json.JsonException)
+            if (ex is JsonException || ex is JsonException)
                 return true;
 
             // Validation errors

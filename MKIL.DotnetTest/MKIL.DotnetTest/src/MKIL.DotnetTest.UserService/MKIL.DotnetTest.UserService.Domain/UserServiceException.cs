@@ -1,5 +1,5 @@
 ﻿using MKIL.DotnetTest.Shared.Lib.DTO;
-using static MKIL.DotnetTest.Shared.Lib.Constants;
+using static MKIL.DotnetTest.Shared.Lib.Utilities.Constants;
 
 namespace MKIL.DotnetTest.UserService.Domain
 {

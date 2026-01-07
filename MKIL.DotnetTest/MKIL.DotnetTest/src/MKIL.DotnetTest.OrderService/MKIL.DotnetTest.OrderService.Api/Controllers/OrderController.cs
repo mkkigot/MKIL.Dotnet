@@ -2,6 +2,8 @@
 using MKIL.DotnetTest.OrderService.Domain;
 using MKIL.DotnetTest.OrderService.Domain.Interface;
 using MKIL.DotnetTest.Shared.Lib.DTO;
+using MKIL.DotnetTest.Shared.Lib.Logging;
+using MKIL.DotnetTest.Shared.Lib.Messaging;
 
 namespace MKIL.DotnetTest.OrderService.Api.Controllers
 {
@@ -11,10 +13,17 @@ namespace MKIL.DotnetTest.OrderService.Api.Controllers
     {
         private readonly IOrderService _orderService;
         private readonly IUserCacheService _userCacheService;
-        public OrderController(IOrderService orderService, IUserCacheService userCacheService) 
+        // for testing failed msg
+        private readonly IEventPublisher _eventPublisher;
+        private readonly ICorrelationIdService _correlationIdService;
+        private readonly IConfiguration _configuration;
+        public OrderController(IOrderService orderService, IUserCacheService userCacheService, ICorrelationIdService correlationIdService, IConfiguration configuration, IEventPublisher eventPublisher) 
         {
             _orderService = orderService;
             _userCacheService = userCacheService;
+            _correlationIdService = correlationIdService;
+            _configuration = configuration;
+            _eventPublisher = eventPublisher;
         }
 
         [HttpPost]
@@ -49,6 +58,44 @@ namespace MKIL.DotnetTest.OrderService.Api.Controllers
         {
             var a = await _userCacheService.GetAllUserCache();
             return Ok(a);
+        }
+
+        /// <summary>
+        /// This is to test a permanent error and see how it would be handled in event consumer
+        /// Expectation: Consumer shouldn't abort process. It should log properly and push the message to DeadLetter topic
+        /// </summary>
+        /// <param name="topic"></param>
+        /// <returns></returns>
+        [HttpGet("try-fail/permanent-error")]
+        public async Task<IActionResult> TryPermanentFailedMessage()
+        {
+            string correlationId = _correlationIdService.GetCorrelationId();
+            await _eventPublisher.PublishAsync(TestTopic, "TEST PERMANENT ERROR", correlationId);
+            await _eventPublisher.PublishAsync(TestTopic, "TEST error msg", correlationId); // will prompt exception
+            return Ok();
+        }
+
+        /// <summary>
+        /// This is to test retrying and see how it would be handled in event consumer
+        /// Expectation: UserCreatedEventConsumer should retry to process the message. you should confirm in the log
+        ///              Consumer shouldn't abort process. It should log properly and push the message to DeadLetter topic
+        /// </summary>
+        /// <param name="topic"></param>
+        /// <returns></returns>
+        [HttpGet("try-fail/transient-error")]
+        public async Task<IActionResult> TryTransientFailedMessage()
+        {
+            string correlationId = _correlationIdService.GetCorrelationId();
+            await _eventPublisher.PublishAsync(TestTopic, "TEST TRANSIENT ERROR", correlationId);
+            return Ok();
+        }
+
+        private string TestTopic
+        {
+            get
+            {
+                return _configuration["Kafka:Topic:NewOrder"];
+            }
         }
     }
 }

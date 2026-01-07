@@ -9,6 +9,6 @@ namespace MKIL.DotnetTest.UserService.Domain.Interfaces
         public Task<UserDto?> GetUserById(Guid userId);
         public Task<List<UserDto>> GetAllUsers();
         public Task<int> InsertOrUpdateUserOrder(OrderDto orderDto);
-        public Task<List<UserOrder>> GetAllUserOrders(Guid userId);
+        public Task<List<UserOrder>> GetAllOrdersOfUser(Guid userId);
     }
 }

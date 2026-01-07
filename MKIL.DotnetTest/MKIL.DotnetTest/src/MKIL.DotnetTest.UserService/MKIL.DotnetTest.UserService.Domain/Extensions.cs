@@ -41,5 +41,13 @@ namespace MKIL.DotnetTest.UserService.Domain
 
             return errorDtos;
         }
+
+        public static UserOrder ToUserOrderEntity(this OrderDto dto)
+        {
+            UserOrder userOrder = new UserOrder();
+            userOrder.OrderId = dto.Id.GetValueOrDefault();
+            userOrder.UserId = dto.UserId;
+            return userOrder;
+        }
     }
 }

@@ -26,13 +26,13 @@ namespace MKIL.DotnetTest.OrderService.Domain.Services
             if (existing == null)
             {
                 existing = userCacheDto.ToUserCacheEntity();
-                existing.SyncedAt = DateTime.Now;
+                existing.SyncedAt = DateTime.UtcNow;
                 await _userCacheRepository.InsertUserCache(existing);
             }
             else if (existing.Email.ToLower() != userCacheDto.Email.ToLower())
             {
                 existing.Email = userCacheDto.Email;
-                existing.SyncedAt = DateTime.Now;
+                existing.SyncedAt = DateTime.UtcNow;
                 await _userCacheRepository.UpdateUserCache(existing);
             }
         

@@ -1,4 +1,4 @@
-﻿namespace MKIL.DotnetTest.Shared.Lib
+﻿namespace MKIL.DotnetTest.Shared.Lib.Utilities
 {
     public static class Constants
     {
