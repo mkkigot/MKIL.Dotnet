@@ -16,7 +16,7 @@
  
 - features:
  > there's an api gateway for ease of user testing 
- > i have added a middleware (http request & reponse, correlation Id) for logging and to further improve the logging process. in 
+ > i have added a middleware (http request & reponse, correlation Id) for logging and to further improve the logging process and added a correlation id. I was intentional in having logs with a correlationId being passed neatly cause I believe this is important in dealing with microservices so that you can trace the flow 
 
   **normal flow scenarios:**
     a. UserService API:
