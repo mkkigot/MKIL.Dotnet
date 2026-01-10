@@ -17,6 +17,7 @@
 - features:
  > there's an api gateway for ease of user testing 
  > i have added a middleware (http request & reponse, correlation Id) for logging and to further improve the logging process and added a correlation id. I was intentional in having logs with a correlationId being passed neatly cause I believe this is important in dealing with microservices so that you can trace the flow 
+ > using polly for service resiliency (during publish and consuming)
 
   **normal flow scenarios:**
     a. UserService API:
@@ -56,7 +57,7 @@ mkildotnettest-user-service-1   | [14:10:20 INF] UserService [7bbaa6c4-5c7e-450b
      - go to User Service API and verify that the order is saved in this service (test by calling >> GET /api/User/{userId}/orders)
 
 **error flow scenarios:**
-     - call this endpoint /api/Users (or Order) /try-fail/permanent-error
+    a. - call this endpoint /api/Users (or Order) /try-fail/permanent-error
         > expectation: it should show in the logs the flow from the api to the passing of the msg from one service to another 
 
     EXAMPLE LOG:
@@ -137,6 +138,55 @@ mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastruct
 mkildotnettest-order-service-1  | [13:20:39 WRN] OrderService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] Message sent to DLQ. Original Topic: user-created-events, Offset: 6, DLQ Partition: 0
 ```
 
+    b. resiliency scenarios
+     - stop docker containers
+     - run docker compose up user-service order-service
+       > expectation: services should still run but show something like:
+       example log:
+```
+[14:14:22 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:24 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:33 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+...
+
+[14:14:21 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:22 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:25 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:35 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+``` 
+     - run docker compose up kafka kafka-topic-init
+     - call endpoints for user-service or order-service
+        > expectation: services should resume 
+        example log:
+```
+
+[14:14:22 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:24 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:33 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:46 INF] UserService [] Partitions assigned: [0]
+[14:16:36 INF] UserService [be928c2a-4c40-41e3-bcd3-a6ed7198b5f4] HTTP Request POST /api/Users | Headers: {"Accept": "*/*", "Host": "localhost:7125", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36", "Accept-Encoding": "gzip, deflate, br, zstd", "Accept-Language": "en-US,en;q=0.9", "Content-Type": "application/json", "Cookie": "***REDACTED***", "Origin": "https://localhost:7125", "Referer": "https://localhost:7125/swagger/index.html", "Content-Length": "97", "sec-ch-ua-platform": "\"Windows\"", "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"", "sec-ch-ua-mobile": "?0", "sec-fetch-site": "same-origin", "sec-fetch-mode": "cors", "sec-fetch-dest": "empty", "priority": "u=1, i"} | Body: {
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "name": "string",
+  "email": "string@a.com"
+}
+[14:16:36 INF] UserService [be928c2a-4c40-41e3-bcd3-a6ed7198b5f4] KafkaEventPublisher initialized with broker: 127.0.0.1:9092
+%4|1768025797.071|GETPID|rdkafka#producer-2| [thrd:main]: Failed to acquire idempotence PID from broker localhost:9092/1: Broker: Coordinator load in progress: retrying
+[14:16:45 INF] UserService [be928c2a-4c40-41e3-bcd3-a6ed7198b5f4] Successfully published message be928c2a-4c40-41e3-bcd3-a6ed7198b5f4 to user-created-events at partition 0, offset 8
+[14:16:45 INF] UserService [be928c2a-4c40-41e3-bcd3-a6ed7198b5f4] HTTP Response POST /api/Users 200 | ContentType: application/json; charset=utf-8 | Body: "9ccc7772-e9b7-415b-b9c6-98c4e07e22e7"
+
+----------------------------------------------------------------------------------------------------------
+
+[14:14:22 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:25 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:35 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
+[14:14:48 INF] OrderService [] Partitions assigned: [0]
+[14:16:45 INF] OrderService [be928c2a-4c40-41e3-bcd3-a6ed7198b5f4] Received message from user-created-events
+[14:16:45 INF] OrderService [be928c2a-4c40-41e3-bcd3-a6ed7198b5f4] Successfully processed and committed message for UserId: 9ccc7772-e9b7-415b-b9c6-98c4e07e22e7
+
+
+
+
+```
 
 
 
@@ -156,7 +206,7 @@ mkildotnettest-order-service-1  | [13:20:39 WRN] OrderService [8cb900d6-cc8a-4ef
         . just give me important code snippets how i can implement. 
 
  
-- I used that initial prompt, then asked for specific code snippets on implementing features with best practices (logging, Seq, etc). I don't blindly copy everything—I code the core stuff myself (domain, infrastructure) and stay hands-on with whatever I do use. It helps me think through things deliberately and reinforces concepts. Plus, my experience gives me preferences that help with troubleshooting and keeping code clean. I'd like to think of myself as a code reviewer when working with AI, not letting it be the captain of the ship. I want to stay involved and actually understand what I'm building. Also, in knowing myself more, 
+- I used that initial prompt, then asked for specific code snippets on implementing features with best practices (logging, polly, etc). I don't blindly copy everything—I code the core stuff myself (domain, infrastructure) and stay hands-on with whatever I do use. It helps me think through things deliberately and reinforces concepts. Plus, my experience gives me preferences that help with troubleshooting and keeping code clean. I'd like to think of myself as a code reviewer when working with AI, not letting it be the captain of the ship. I want to stay involved and actually understand what I'm building. Also, in knowing myself more, 
 
 - I want AI to guide my implementation so I can focus on the essentials. I tend to overcomplicate things instead of nailing the basics, so I use prompts as guardrails to spend reasonable time on this test while hitting what actually matters.
 
@@ -165,8 +215,20 @@ mkildotnettest-order-service-1  | [13:20:39 WRN] OrderService [8cb900d6-cc8a-4ef
 - I come in with my own assumptions and approaches, then ask AI for a different perspective. If it's better, I use it. If my approach makes more sense, I stick with that. It helps me learn new things and make better decisions.
 
 
-
 ### Any assumptions or trade-offs made
  > i used clean architecture instead of ntier
 
  > some code files, combined interface and class
+
+
+ > Resilience Strategy: Currently using Polly retry policy with exponential backoff. When I initially prompted in ai for this, it gave me a custom retry handler. Then I discovered Polly, which is open source and widely used. Better to use a reliable library then rely on custom ai generated retry handler
+
+**Future Improvements:**
+- Add circuit breaker pattern to prevent cascade failures
+- Implement bulkhead isolation for thread pool protection
+- Add timeout policies for long-running operations
+
+**Why not circuit breaker now?**
+- Application scope is limited
+- Retry policy sufficient for transient failures
+- Would add in production for high-traffic scenarios

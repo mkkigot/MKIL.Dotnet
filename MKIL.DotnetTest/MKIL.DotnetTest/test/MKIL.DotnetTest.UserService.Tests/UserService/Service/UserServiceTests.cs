@@ -16,6 +16,9 @@ using UserServiceClass = MKIL.DotnetTest.UserService.Domain.Services.UserService
 
 namespace MKIL.DotnetTest.UnitTest.UserService.Service
 {
+    /// <summary>
+    /// This is to test the main function of the UserService
+    /// </summary>
     public class UserServiceTests
     {
         private readonly Mock<IUserRepository> _mockRepository;
@@ -23,7 +26,6 @@ namespace MKIL.DotnetTest.UnitTest.UserService.Service
         private readonly UserServiceClass _userService;
         private readonly Mock<IValidator<UserDto>> _mockValidator_UserDto;
         private readonly Mock<IConfiguration> _mockConfiguration;
-        private readonly DbContextOptions<UserDbContext> _dbContextOptions;
 
         public UserServiceTests()
         {

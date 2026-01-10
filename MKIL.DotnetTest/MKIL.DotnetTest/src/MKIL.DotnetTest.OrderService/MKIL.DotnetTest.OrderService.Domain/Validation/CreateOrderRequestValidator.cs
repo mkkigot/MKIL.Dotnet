@@ -13,19 +13,21 @@ namespace MKIL.DotnetTest.OrderService.Domain.Validation
             _userCacheRepository = userCacheRepository;
 
             RuleFor(x => x.UserId)
-                .NotEmpty().WithMessage("UserId is required")
-                .MustAsync(UserShouldExist).WithMessage("User does not exists");
+                .NotEmpty().WithMessage(Constants.VALIDATION_ERROR_UserId_Required)
+                .MustAsync(UserShouldExist).WithMessage(Constants.VALIDATION_ERROR_UserId_NotExists);
 
             RuleFor(x => x.ProductName)
-                .NotEmpty().WithMessage("Product Name is required")
-                .MaximumLength(200);
+                .NotEmpty().WithMessage(Constants.VALIDATION_ERROR_ProductName_Required)
+                .MaximumLength(200).WithMessage(Constants.VALIDATION_ERROR_ProductName_MaxLengthExceed);
 
             RuleFor(x => x.Price)
-                .NotNull().WithMessage("Price is required");
+                .NotNull().WithMessage(Constants.VALIDATION_ERROR_Price_Required)
+                .GreaterThan(0).WithMessage(Constants.VALIDATION_ERROR_Price_Required);
+
 
             RuleFor(x => x.Quantity)
-                .NotNull().WithMessage("Quantity is required")
-                .GreaterThan(0).WithMessage("Quantity should be greater than 0");
+                .NotNull().WithMessage(Constants.VALIDATION_ERROR_Quantity_RequiredAndGreaterthan0)
+                .GreaterThan(0).WithMessage(Constants.VALIDATION_ERROR_Quantity_RequiredAndGreaterthan0);
 
         }
 
