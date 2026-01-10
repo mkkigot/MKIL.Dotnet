@@ -7,6 +7,8 @@ using MKIL.DotnetTest.OrderService.Domain.Interface;
 using MKIL.DotnetTest.Shared.Lib.DTO;
 using MKIL.DotnetTest.Shared.Lib.Service;
 using MKIL.DotnetTest.Shared.Lib.Utilities;
+using Polly;
+using Polly.Retry;
 using Serilog;
 using Serilog.Context;
 using System.Net.Sockets;
@@ -23,6 +25,8 @@ namespace MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices
         private readonly string _topic_NewUser;
         private readonly string _groupId;
         private readonly string _bootstrapServer;
+        private readonly AsyncRetryPolicy _retryPolicy;
+        private const int MaxRetryAttempts = 3;
 
         public UserCreatedEventConsumer(IServiceScopeFactory scopeFactory, IConfiguration configuration)
         {
@@ -30,12 +34,27 @@ namespace MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices
             _configuration = configuration;
             _logger = Log.ForContext<UserCreatedEventConsumer>();
 
-            _bootstrapServer = _configuration["Kafka:BootstrapServers"] 
-                ?? throw new InvalidOperationException("Kafka:BootstrapServers configuration is missing");
-            _topic_NewUser = _configuration["Kafka:Topic:NewUser"]
-                ?? throw new InvalidOperationException("Kafka:Topic:NewUser configuration is missing");
-            _groupId = _configuration["Kafka:GroupId"]
-                ?? throw new InvalidOperationException("Kafka:GroupId configuration is missing");
+            _bootstrapServer = _configuration["Kafka:BootstrapServers"] ?? throw new InvalidOperationException("Kafka:BootstrapServers configuration is missing");
+            _topic_NewUser = _configuration["Kafka:Topic:NewUser"] ?? throw new InvalidOperationException("Kafka:Topic:NewUser configuration is missing");
+            _groupId = _configuration["Kafka:GroupId"] ?? throw new InvalidOperationException("Kafka:GroupId configuration is missing");
+
+            // Configure retry policy
+            _retryPolicy = Policy
+                .Handle<Exception>(ex => TransientErrorDetector.IsTransient(ex))
+                .WaitAndRetryAsync(
+                    retryCount: MaxRetryAttempts,
+                    sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // Exponential backoff
+                    onRetry: (exception, timeSpan, retryCount, context) =>
+                    {
+                        _logger.Warning(
+                            "Retry {RetryCount} / {MaxRetryAttempts} after {Delay}ms due to: {Exception}",
+                            retryCount,
+                            MaxRetryAttempts,
+                            timeSpan.TotalMilliseconds,
+                            exception.Message
+                        );
+                    }
+                );
 
         }
 
@@ -98,31 +117,20 @@ namespace MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices
 
                         _logger.Information("Received message from {Topic}", result.Topic);
 
-                        // Use retry handler
-                        await RetryHandler.ExecuteAsync(
-                            action: async () =>
-                            {
-                                #region FOR TESTING PURPOSE ONLY
-                                if (result.Message.Value == "\"TEST PERMANENT ERROR\"")
-                                    throw new JsonException("From TEST PERMANENT ERROR");
+                        await _retryPolicy.ExecuteAsync(async () =>
+                        {
+                            #region FOR TESTING PURPOSE ONLY
+                            if (result.Message.Value == "\"TEST PERMANENT ERROR\"")
+                                throw new JsonException("From TEST PERMANENT ERROR");
 
-                                if (result.Message.Value == "\"TEST TRANSIENT ERROR\"")
-                                    throw new SocketException((int)SocketError.TimedOut, "From TEST TRANSIENT ERROR");
-                                #endregion FOR TESTING PURPOSE ONLY
+                            if (result.Message.Value == "\"TEST TRANSIENT ERROR\"")
+                                throw new SocketException((int)SocketError.TimedOut, "From TEST TRANSIENT ERROR");
+                            #endregion FOR TESTING PURPOSE ONLY
 
-                                await ProcessNewUser(consumer, result, stoppingToken);
-                            },
-                            maxRetries: 3,
-                            onRetry: (ex, attempt, delay) =>
-                            {
-                                _logger.Warning(ex,
-                                    "Transient error on attempt {Attempt}/3. " +
-                                    "Retrying after {Delay}ms. Error: {ErrorType}",
-                                    attempt, delay.TotalMilliseconds, ex.GetType().Name);
-                            },
-                            cancellationToken: stoppingToken
-                        );
+                            await ProcessNewUser(consumer, result, stoppingToken);
 
+                        });
+                        
                         consumer.Commit(result);
                     }
                     catch (Exception ex)

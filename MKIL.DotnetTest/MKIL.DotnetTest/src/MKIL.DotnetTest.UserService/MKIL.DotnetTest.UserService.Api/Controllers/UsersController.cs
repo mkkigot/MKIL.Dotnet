@@ -76,12 +76,22 @@ namespace MKIL.DotnetTest.UserService.Api.Controllers
         /// </summary>
         /// <param name="topic"></param>
         /// <returns></returns>
-        [HttpGet("try-fail/permanent-error")]
-        public async Task<IActionResult> TryPermanentFailedMessage()
+        [HttpGet("try-fail/permanent-error/{testType}")]
+        public async Task<IActionResult> TryPermanentFailedMessage(string testType = "consumer")
         {
             string correlationId = _correlationIdService.GetCorrelationId();
-            await _eventPublisher.PublishAsync(TestTopic, "TEST PERMANENT ERROR", correlationId);
-            await _eventPublisher.PublishAsync(TestTopic, "TEST error msg", correlationId); // will prompt exception
+
+            if (testType == "producer")
+            {
+                await _eventPublisher.PublishAsync(TestTopic, "TEST FOR PRODUCER PERMANENT ERROR", correlationId);
+                await _eventPublisher.PublishAsync(TestTopic, "TEST error msg", correlationId); // will prompt exception
+            }
+            else
+            {
+                await _eventPublisher.PublishAsync(TestTopic, "TEST PERMANENT ERROR", correlationId);
+                await _eventPublisher.PublishAsync(TestTopic, "TEST error msg", correlationId); // will prompt exception
+            }
+
             return Ok();
         }
 
@@ -92,13 +102,19 @@ namespace MKIL.DotnetTest.UserService.Api.Controllers
         /// </summary>
         /// <param name="topic"></param>
         /// <returns></returns>
-        [HttpGet("try-fail/transient-error")]
-        public async Task<IActionResult> TryTransientFailedMessage()
+        [HttpGet("try-fail/transient-error/{testType}")]
+        public async Task<IActionResult> TryTransientFailedMessage(string testType = "consumer")
         {
             string correlationId = _correlationIdService.GetCorrelationId();
-            await _eventPublisher.PublishAsync(TestTopic, "TEST TRANSIENT ERROR", correlationId);
+
+            if (testType == "producer")
+                await _eventPublisher.PublishAsync(TestTopic, "TEST FOR PRODUCER TRANSIENT ERROR", correlationId);
+            else
+                await _eventPublisher.PublishAsync(TestTopic, "TEST TRANSIENT ERROR", correlationId);
+
             return Ok();
         }
+
 
         private string TestTopic
         {
