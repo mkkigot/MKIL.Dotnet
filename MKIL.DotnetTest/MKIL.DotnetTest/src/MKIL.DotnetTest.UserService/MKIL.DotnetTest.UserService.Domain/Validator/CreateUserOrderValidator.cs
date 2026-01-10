@@ -13,12 +13,12 @@ namespace MKIL.DotnetTest.UserService.Domain.Validator
             _userRepository = userRepository;
 
             RuleFor(x => x.UserId)
-                .NotEmpty().WithMessage("UserId is required")
-                .MustAsync(ShouldExist).WithMessage("UserId does not exists");
+                .NotEmpty().WithMessage(Constants.VALIDAITON_ERROR_UserId_Required)
+                .MustAsync(ShouldExist).WithMessage(Constants.VALIDAITON_ERROR_UserId_NotExists);
 
 
             RuleFor(x => x.OrderId)
-                .NotEmpty().WithMessage("OrderId is required");
+                .NotEmpty().WithMessage(Constants.VALIDAITON_ERROR_OrderId_Required);
 
         }
 

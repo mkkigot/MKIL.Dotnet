@@ -13,15 +13,15 @@ namespace MKIL.DotnetTest.UserService.Domain.Validator
             _userRepository = userRepository;
 
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required")
-                .EmailAddress().WithMessage("Invalid email format")
-                .Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").WithMessage("Email must be a valid email address")
-                .MaximumLength(100).WithMessage("Email is too long")
-                .MustAsync(BeUniqueEmail).WithMessage("Email already exists");
+                .NotEmpty().WithMessage(Constants.VALIDATION_ERROR_Email_Required)
+                .EmailAddress().WithMessage(Constants.VALIDATION_ERROR_Email_InvalidEmail)
+                .Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").WithMessage(Constants.VALIDATION_ERROR_Email_InvalidEmail)
+                .MaximumLength(100).WithMessage(Constants.VALIDATION_ERROR_Email_TooLong)
+                .MustAsync(BeUniqueEmail).WithMessage(Constants.VALIDATION_ERROR_Email_Duplicate);
             
 
             RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Name is required")
+                .NotEmpty().WithMessage(Constants.VALIDAITON_ERROR_Name_Required)
                 .MaximumLength(100);
 
         }
