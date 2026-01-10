@@ -2,14 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using MKIL.DotnetTest.Shared.Lib.Messaging;
 
-namespace MKIL.DotnetTest.OrderService.Api.Controllers
+namespace MKIL.DotnetTest.UserService.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class HealthCheckController : ControllerBase
     {
         private readonly IEventPublisher _eventPublisher;
-        public HealthCheckController(IEventPublisher eventPublisher) 
+        public HealthCheckController(IEventPublisher eventPublisher)
         {
             _eventPublisher = eventPublisher;
         }

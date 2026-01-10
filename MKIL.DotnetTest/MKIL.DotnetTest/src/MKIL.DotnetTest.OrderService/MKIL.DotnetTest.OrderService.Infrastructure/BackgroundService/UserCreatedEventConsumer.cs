@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MKIL.DotnetTest.OrderService.Domain;
 using MKIL.DotnetTest.OrderService.Domain.Interface;
 using MKIL.DotnetTest.Shared.Lib.DTO;
 using MKIL.DotnetTest.Shared.Lib.Service;
