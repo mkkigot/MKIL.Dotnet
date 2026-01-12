@@ -13,11 +13,13 @@
 ### Architecture overview and key decisions
 - chose clean architecture instead of ntier
  > given my experience, i have always used ntier and the natural choice for me is to use ntier as well. but when i asked for the folder structure as a guide for implementation it gave me a different one and gave me this clean architecture approach to which i realized my team has also started using, i just didnt know that was it. i asked ai why it chose this architecture and it seemed reasonable and i also wanted to use practicing this as well.i dont just blindly follow every suggestion. i tend to pause and think and use it as an opportunity to learn. also, for the size of this application, multiple libraries isnt suited. better to combine it such that it would also be easier to do tdd
+
  
 - features:
  > there's an api gateway for ease of user testing 
  > i have added a middleware (http request & reponse, correlation Id) for logging and to further improve the logging process and added a correlation id. I was intentional in having logs with a correlationId being passed neatly cause I believe this is important in dealing with microservices so that you can trace the flow 
  > using polly for service resiliency (during publish and consuming)
+ > verify everything happening in the application through the logs
 
   **normal flow scenarios:**
     a. UserService API:
@@ -57,93 +59,43 @@ mkildotnettest-user-service-1   | [14:10:20 INF] UserService [7bbaa6c4-5c7e-450b
      - go to User Service API and verify that the order is saved in this service (test by calling >> GET /api/User/{userId}/orders)
 
 **error flow scenarios:**
-    a. - call this endpoint /api/Users (or Order) /try-fail/permanent-error
-        > expectation: it should show in the logs the flow from the api to the passing of the msg from one service to another 
+    a. - call this endpoint /api/Users (or Order) /try-fail/permanent-error/consumer 
+        > expectation: 
+            - endpoint should successfully publish the message. 
+            - when consumer receives it, it should receive a permanent error and should not retry
+            - this will publish 2 failed messages. 
+                a) "TEST PERMANENT ERROR" > will be caught in one of the conditions in the consumer 
+                ``` throw new JsonException("From TEST PERMANENT ERROR") ``` 
+                b) "TEST error msg" > will be caught inside the method **ProcessNewUser** when it tries to deserialize the message
+            - it should show in the logs the flow from the api to the passing of the msg to the consumer. 
+            - you should see 2 received messages and those messages should be published to the Dead Letter Queue
+            
+    b. - call this endpoint /api/Users (or Order) /try-fail/permanent-error/producer 
+        > expectation: 
+            - endpoint should NOT publish the message. 
+            - endpoint should NOT retry in publishing the message 
+        
+    c. - call this endpoint /api/Users (or Order) /try-fail/transient-error/consumer 
+        > expectation: 
+            - endpoint should successfully publish the message. 
+            - when consumer receives it, it should receive a permanent error and SHOULD RETRY
+            - it should show in the logs the flow from the api to the passing of the msg to the consumer. 
+            - verify in the logs that it should retry to process the Message
+            - after the 3rd retry. it should publish the message to the Dead Letter Queue
+            
+    d. - call this endpoint /api/Users (or Order) /try-fail/transient-error/producer 
+        > expectation: 
+            - endpoint should NOT publish the message. 
+            - endpoint should retry in publishing the message 
+            - it should show in the logs the retry events 
+            
 
-    EXAMPLE LOG:
-```
-mkildotnettest-user-service-1   | [13:20:25 INF] UserService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] HTTP Request GET /api/Users/try-fail/transient-error | Headers: {"Accept": "*/*", "Connection": "keep-alive", "Host": "127.0.0.1:5001", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36", "Accept-Encoding": "gzip, deflate, br, zstd", "Accept-Language": "en-US,en;q=0.9", "Cookie": "***REDACTED***", "Referer": "http://127.0.0.1:5001/swagger/index.html", "sec-ch-ua-platform": "\"Windows\"", "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"", "sec-ch-ua-mobile": "?0", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty"} | Body: (empty)
-mkildotnettest-user-service-1   | [13:20:25 WRN] UserService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] Failed to determine the https port for redirect.
-mkildotnettest-user-service-1   | [13:20:25 INF] UserService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] KafkaEventPublisher initialized with broker: kafka:29092
-mkildotnettest-user-service-1   | [13:20:25 INF] UserService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] Successfully published message 8cb900d6-cc8a-4ef3-a242-a17d0be78c9a to user-created-events at partition 0, offset 6
-mkildotnettest-order-service-1  | [13:20:25 INF] OrderService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] Received message from user-created-events
-mkildotnettest-user-service-1   | [13:20:25 INF] UserService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] HTTP Response GET /api/Users/try-fail/transient-error 200 | ContentType: null | Body: (empty)
-mkildotnettest-order-service-1  | [13:20:25 WRN] OrderService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] Transient error on attempt 1/3. Retrying after 2189ms. Error: SocketException
-mkildotnettest-order-service-1  | System.Net.Sockets.SocketException (110): From TEST TRANSIENT ERROR
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.<>c__DisplayClass8_1.<<Consume_NewUser_Messages>b__3>d.MoveNext() in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 110
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 67
-mkildotnettest-order-service-1  | [13:20:27 WRN] OrderService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] Transient error on attempt 2/3. Retrying after 4222ms. Error: SocketException
-mkildotnettest-order-service-1  | System.Net.Sockets.SocketException (110): From TEST TRANSIENT ERROR
- Error processing message
-mkildotnettest-order-service-1  | System.Net.Sockets.SocketException (110): From TEST TRANSIENT ERROR
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.<>c__DisplayClass8_1.<<Consume_NewUser_Messages>b__3>d.MoveNext() in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 110
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
- Error processing message
-mkildotnettest-order-service-1  | System.Net.Sockets.SocketException (110): From TEST TRANSIENT ERROR
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.<>c__DisplayClass8_1.<<Consume_NewUser_Messages>b__3>d.MoveNext() in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 110
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 67
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 109
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync(Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 30
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.Consume_NewUser_Messages(CancellationToken stoppingToken) in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 102
-mkildotnettest-order-service-1  | [13:20:39 WRN] OrderService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] Message sent to DLQ. Original Topic: user-created-events, Offset: 6, DLQ Partition: 0
-
- Error processing message
-mkildotnettest-order-service-1  | System.Net.Sockets.SocketException (110): From TEST TRANSIENT ERROR
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.<>c__DisplayClass8_1.<<Consume_NewUser_Messages>b__3>d.MoveNext() in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 110
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 67
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 109
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync(Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 30
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.Consume_NewUser_Messages(CancellationToken stoppingToken) in /src/MKIL.DotnetTest.OrderService/MKIL. Error processing message
-mkildotnettest-order-service-1  | System.Net.Sockets.SocketException (110): From TEST TRANSIENT ERROR
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.<>c__DisplayClass8_1.<<Consume_NewUser_Messages>b__3>d.MoveNext() in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 110
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 67
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 109
- Error processing message
-mkildotnettest-order-service-1  | System.Net.Sockets.SocketException (110): From TEST TRANSIENT ERROR
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.<>c__DisplayClass8_1.<<Consume_NewUser_Messages>b__3>d.MoveNext() in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 110
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 67
-mkildotnettest-order-service-1  | System.Net.Sockets.SocketException (110): From TEST TRANSIENT ERROR
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.<>c__DisplayClass8_1.<<Consume_NewUser_Messages>b__3>d.MoveNext() in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 110
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-ce/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 110
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.<>c__DisplayClass1_0.<<ExecuteAsync>b__0>d.MoveNext() in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 33
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  | --- End of stack trace from previous location ---
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 67
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync[T](Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 109
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.Shared.Lib.Utilities.RetryHandler.ExecuteAsync(Func`1 action, Int32 maxRetries, Action`3 onRetry, Func`2 onComplete, CancellationToken cancellationToken) in /src/MKIL.DotnetTest.Shared.Lib/Utilities/RetryHandler.cs:line 30
-mkildotnettest-order-service-1  |    at MKIL.DotnetTest.OrderService.Infrastructure.BackgroundServices.UserCreatedEventConsumer.Consume_NewUser_Messages(CancellationToken stoppingToken) in /src/MKIL.DotnetTest.OrderService/MKIL.DotnetTest.OrderService.Infrastructure/BackgroundService/UserCreatedEventConsumer.cs:line 102
-mkildotnettest-order-service-1  | [13:20:39 WRN] OrderService [8cb900d6-cc8a-4ef3-a242-a17d0be78c9a] Message sent to DLQ. Original Topic: user-created-events, Offset: 6, DLQ Partition: 0
-```
-
-    b. resiliency scenarios
-     - stop docker containers
-     - run docker compose up user-service order-service
+    d. resiliency scenarios
+     1) stop docker containers
+     2) run docker compose up user-service order-service
        > expectation: services should still run but show something like:
-       example log:
 ```
+  example log:
 [14:14:22 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
 [14:14:24 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
 [14:14:33 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
@@ -154,12 +106,12 @@ mkildotnettest-order-service-1  | [13:20:39 WRN] OrderService [8cb900d6-cc8a-4ef
 [14:14:25 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
 [14:14:35 ERR] OrderService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
 ``` 
-     - run docker compose up kafka kafka-topic-init
-     - call endpoints for user-service or order-service
+     3) run docker compose up kafka kafka-topic-init
+     4) call endpoints for user-service or order-service
         > expectation: services should resume 
-        example log:
+       
 ```
-
+ example log:
 [14:14:22 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
 [14:14:24 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
 [14:14:33 ERR] UserService [] Kafka Consumer Error: 1/1 brokers are down - Local_AllBrokersDown
@@ -182,9 +134,6 @@ mkildotnettest-order-service-1  | [13:20:39 WRN] OrderService [8cb900d6-cc8a-4ef
 [14:14:48 INF] OrderService [] Partitions assigned: [0]
 [14:16:45 INF] OrderService [be928c2a-4c40-41e3-bcd3-a6ed7198b5f4] Received message from user-created-events
 [14:16:45 INF] OrderService [be928c2a-4c40-41e3-bcd3-a6ed7198b5f4] Successfully processed and committed message for UserId: 9ccc7772-e9b7-415b-b9c6-98c4e07e22e7
-
-
-
 
 ```
 
